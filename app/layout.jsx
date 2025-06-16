@@ -4,6 +4,7 @@ import "./globals.css"
 import { Navigation } from "@/components/navigation"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ClerkProvider } from "@clerk/nextjs"
+import { ClientLayout } from "@/components/client-layout"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -21,8 +22,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <ClerkProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-            <Navigation />
-            <main>{children}</main>
+            <ClientLayout>
+              <Navigation />
+              <main>{children}</main>
+            </ClientLayout>
           </ThemeProvider>
         </ClerkProvider>
       </body>

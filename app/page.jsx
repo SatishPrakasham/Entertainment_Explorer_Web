@@ -1,4 +1,7 @@
-import React from "react"
+"use client"
+
+import React, { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -6,123 +9,179 @@ import { Search, Play, BookOpen, Music } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
-const trendingMovies = [
-  {
-    id: 1,
-    title: "Cosmic Odyssey",
-    description: "An epic space adventure that spans galaxies",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 2,
-    title: "Midnight Detective",
-    description: "A thrilling noir mystery in the city",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 3,
-    title: "Digital Dreams",
-    description: "A cyberpunk tale of virtual reality",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 4,
-    title: "Ocean's Heart",
-    description: "An underwater adventure of discovery",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-]
+// Movie and book data will be fetched from the API
 
-const trendingBooks = [
-  {
-    id: 1,
-    title: "The Last Library",
-    description: "A post-apocalyptic tale of knowledge preservation",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 2,
-    title: "Quantum Hearts",
-    description: "A sci-fi romance across parallel universes",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 3,
-    title: "Mountain Whispers",
-    description: "A mystical journey through ancient peaks",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 4,
-    title: "City of Shadows",
-    description: "Urban fantasy in a world of hidden magic",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-]
+// Music data will be fetched from the API
 
-const trendingMusic = [
-  {
-    id: 1,
-    title: "Neon Nights",
-    description: "Synthwave album with retro-futuristic vibes",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 2,
-    title: "Acoustic Soul",
-    description: "Intimate acoustic performances",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 3,
-    title: "Electric Dreams",
-    description: "Electronic music for the digital age",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 4,
-    title: "Jazz Fusion",
-    description: "Modern jazz with contemporary elements",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-]
-
-function TrendingSection({ title, items, icon: Icon, href }) {
+function TrendingSection({ title, items = [], isLoading, icon: Icon, href }) {
+  // Determine the content type based on href
+  const contentType = href.replace('/', '');
+  
   return (
-    <section className="py-12">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
+    <section className="mb-12">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
           <Icon className="h-6 w-6 text-primary" />
           <h2 className="text-2xl font-bold">{title}</h2>
         </div>
         <Link href={href}>
-          <Button variant="outline" className="rounded-full">
-            View All
-          </Button>
+          <Button variant="ghost">View All</Button>
         </Link>
       </div>
-      <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-        {items.map((item) => (
-          <Card key={item.id} className="flex-shrink-0 w-64 hover:shadow-lg transition-shadow">
-            <CardContent className="p-4">
-              <Image
-                src={item.image || "/placeholder.svg"}
-                alt={item.title}
-                width={200}
-                height={300}
-                className="w-full h-48 object-cover rounded-lg mb-4"
-              />
-              <h3 className="font-semibold text-lg mb-2 line-clamp-1">{item.title}</h3>
-              <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+
+      {isLoading ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="w-full">
+              <CardContent className="p-4">
+                <div className="w-full h-48 bg-muted rounded-lg mb-4 animate-pulse" />
+                <div className="h-5 bg-muted rounded w-3/4 mb-2 animate-pulse" />
+                <div className="h-4 bg-muted rounded w-1/2 animate-pulse" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          No items available
+        </div>
+      ) : (
+        <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+          {items.map((item) => {
+            // Determine image source based on content type
+            const imageSrc = 
+              contentType === 'books' ? (item.coverUrl || '/placeholder.svg') :
+              contentType === 'music' ? (item.image || '/placeholder.svg') :
+              (item.posterUrl || '/placeholder.svg');
+              
+            // Determine details text based on content type
+            const detailsText = 
+              contentType === 'books' ? `${item.year || 'Unknown'} • ${item.author || 'Unknown Author'}` :
+              contentType === 'music' ? item.description || 'No description' :
+              `${item.year || ''} • ${item.type === 'movie' ? 'Movie' : 'TV Show'}`;
+              
+            // Determine link path based on content type
+            const linkPath = `/${contentType}/${item.id}`;
+            
+            return (
+              <Link key={item.id} href={linkPath}>
+                <Card className="flex-shrink-0 w-64 hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-4">
+                    <Image
+                      src={imageSrc}
+                      alt={item.title || 'Media item'}
+                      width={200}
+                      height={300}
+                      className="w-full h-48 object-cover rounded-lg mb-4"
+                    />
+                    <h3 className="font-semibold text-lg mb-2 line-clamp-1">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {detailsText}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </section>
-  )
+  );
 }
 
 export default function HomePage() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [popularMovies, setPopularMovies] = useState([]);
+  const [isLoadingPopular, setIsLoadingPopular] = useState(true);
+  const [trendingBooks, setTrendingBooks] = useState([]);
+  const [isLoadingBooks, setIsLoadingBooks] = useState(true);
+  const [newReleases, setNewReleases] = useState([]);
+  const [isLoadingMusic, setIsLoadingMusic] = useState(true);
+  
+  // Fetch trending movies
+  // useEffect(() => {
+  //   async function fetchTrendingMovies() {
+  //     try {
+  //       setIsLoadingTrending(true);
+  //       const response = await fetch('/api/movies/trending');
+  //       if (!response.ok) throw new Error('Failed to fetch trending movies');
+  //       const data = await response.json();
+  //       setTrendingMovies(data.results.slice(0, 8)); // Limit to 8 movies
+  //     } catch (error) {
+  //       console.error('Error fetching trending movies:', error);
+  //     } finally {
+  //       setIsLoadingTrending(false);
+  //     }
+  //   }
+    
+  //   fetchTrendingMovies();
+  // }, []);
+  
+  // Fetch popular movies
+  useEffect(() => {
+    async function fetchPopularMovies() {
+      try {
+        setIsLoadingPopular(true);
+        const response = await fetch('/api/movies/popular');
+        if (!response.ok) throw new Error('Failed to fetch popular movies');
+        const data = await response.json();
+        setPopularMovies(data.results.slice(0, 8)); // Limit to 8 movies
+      } catch (error) {
+        console.error('Error fetching popular movies:', error);
+      } finally {
+        setIsLoadingPopular(false);
+      }
+    }
+    
+    fetchPopularMovies();
+  }, []);
+  
+  // Fetch trending books
+  useEffect(() => {
+    async function fetchTrendingBooks() {
+      try {
+        setIsLoadingBooks(true);
+        const response = await fetch('/api/books/trending');
+        if (!response.ok) throw new Error('Failed to fetch trending books');
+        const data = await response.json();
+        setTrendingBooks(data.results); // API already limits to 8 books
+      } catch (error) {
+        console.error('Error fetching trending books:', error);
+      } finally {
+        setIsLoadingBooks(false);
+      }
+    }
+    
+    fetchTrendingBooks();
+  }, []);
+  
+  // Fetch new music releases
+  useEffect(() => {
+    async function fetchNewReleases() {
+      try {
+        setIsLoadingMusic(true);
+        const response = await fetch('/api/music/new-releases/homepage');
+        if (!response.ok) throw new Error('Failed to fetch new music releases');
+        const data = await response.json();
+        setNewReleases(data.results); // API already limits to 8 albums
+      } catch (error) {
+        console.error('Error fetching new music releases:', error);
+      } finally {
+        setIsLoadingMusic(false);
+      }
+    }
+    
+    fetchNewReleases();
+  }, []);
+  
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      // Navigate to search results page with the query
+      router.push(`/search?query=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -141,17 +200,51 @@ export default function HomePage() {
             <Input
               placeholder="Search by title, genre, or artist..."
               className="pl-12 py-6 text-lg rounded-full border-2 focus:border-primary"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
-            <Button className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full px-8">Search</Button>
+            <Button 
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full px-8"
+              onClick={handleSearch}
+              disabled={!searchQuery.trim()}
+            >
+              Search
+            </Button>
           </div>
         </div>
       </section>
 
       {/* Trending Sections */}
       <div className="max-w-7xl mx-auto px-4">
-        <TrendingSection title="Trending Movies" items={trendingMovies} icon={Play} href="/movies" />
-        <TrendingSection title="Trending Books" items={trendingBooks} icon={BookOpen} href="/books" />
-        <TrendingSection title="Trending Music" items={trendingMusic} icon={Music} href="/music" />
+        {/* <TrendingSection 
+          title="Trending Movies" 
+          items={trendingMovies} 
+          isLoading={isLoadingTrending}
+          icon={Play} 
+          href="/movies" 
+        /> */}
+        <TrendingSection 
+          title="Popular Movies" 
+          items={popularMovies} 
+          isLoading={isLoadingPopular}
+          icon={Play} 
+          href="/movies" 
+        />
+        <TrendingSection 
+          title="Trending Books" 
+          items={trendingBooks} 
+          isLoading={isLoadingBooks}
+          icon={BookOpen} 
+          href="/books" 
+        />
+        <TrendingSection 
+          title="New Music Releases" 
+          items={newReleases} 
+          isLoading={isLoadingMusic}
+          icon={Music} 
+          href="/music" 
+        />
       </div>
 
       {/* Footer */}
