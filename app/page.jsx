@@ -1,4 +1,7 @@
-import React from "react"
+"use client"
+
+import React, { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -6,32 +9,7 @@ import { Search, Play, BookOpen, Music } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
-const trendingMovies = [
-  {
-    id: 1,
-    title: "Cosmic Odyssey",
-    description: "An epic space adventure that spans galaxies",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 2,
-    title: "Midnight Detective",
-    description: "A thrilling noir mystery in the city",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 3,
-    title: "Digital Dreams",
-    description: "A cyberpunk tale of virtual reality",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 4,
-    title: "Ocean's Heart",
-    description: "An underwater adventure of discovery",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-]
+// Movie data will be fetched from the API
 
 const trendingBooks = [
   {
@@ -87,7 +65,7 @@ const trendingMusic = [
   },
 ]
 
-function TrendingSection({ title, items, icon: Icon, href }) {
+function TrendingSection({ title, items = [], isLoading, icon: Icon, href }) {
   return (
     <section className="py-12">
       <div className="flex items-center justify-between mb-8">
@@ -101,28 +79,107 @@ function TrendingSection({ title, items, icon: Icon, href }) {
           </Button>
         </Link>
       </div>
-      <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-        {items.map((item) => (
-          <Card key={item.id} className="flex-shrink-0 w-64 hover:shadow-lg transition-shadow">
-            <CardContent className="p-4">
-              <Image
-                src={item.image || "/placeholder.svg"}
-                alt={item.title}
-                width={200}
-                height={300}
-                className="w-full h-48 object-cover rounded-lg mb-4"
-              />
-              <h3 className="font-semibold text-lg mb-2 line-clamp-1">{item.title}</h3>
-              <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      
+      {isLoading ? (
+        <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="flex-shrink-0 w-64">
+              <CardContent className="p-4">
+                <div className="w-full h-48 bg-muted animate-pulse rounded-lg mb-4"></div>
+                <div className="h-5 w-3/4 bg-muted animate-pulse rounded mb-2"></div>
+                <div className="h-4 w-full bg-muted animate-pulse rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          No items available
+        </div>
+      ) : (
+        <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+          {items.map((item) => (
+            <Link key={item.id} href={`/movies/${item.id}`}>
+              <Card className="flex-shrink-0 w-64 hover:shadow-lg transition-shadow cursor-pointer">
+                <CardContent className="p-4">
+                  {item.posterUrl ? (
+                    <Image
+                      src={item.posterUrl}
+                      alt={item.title}
+                      width={200}
+                      height={300}
+                      className="w-full h-48 object-cover rounded-lg mb-4"
+                    />
+                  ) : (
+                    <div className="w-full h-48 bg-muted flex items-center justify-center rounded-lg mb-4">
+                      No Image
+                    </div>
+                  )}
+                  <h3 className="font-semibold text-lg mb-2 line-clamp-1">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {item.year} • {item.type === 'movie' ? 'Movie' : 'TV Show'}
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
     </section>
   )
 }
 
 export default function HomePage() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [popularMovies, setPopularMovies] = useState([]);
+  const [isLoadingPopular, setIsLoadingPopular] = useState(true);
+  
+  // Fetch trending movies
+  // useEffect(() => {
+  //   async function fetchTrendingMovies() {
+  //     try {
+  //       setIsLoadingTrending(true);
+  //       const response = await fetch('/api/movies/trending');
+  //       if (!response.ok) throw new Error('Failed to fetch trending movies');
+  //       const data = await response.json();
+  //       setTrendingMovies(data.results.slice(0, 8)); // Limit to 8 movies
+  //     } catch (error) {
+  //       console.error('Error fetching trending movies:', error);
+  //     } finally {
+  //       setIsLoadingTrending(false);
+  //     }
+  //   }
+    
+  //   fetchTrendingMovies();
+  // }, []);
+  
+  // Fetch popular movies
+  useEffect(() => {
+    async function fetchPopularMovies() {
+      try {
+        setIsLoadingPopular(true);
+        const response = await fetch('/api/movies/popular');
+        if (!response.ok) throw new Error('Failed to fetch popular movies');
+        const data = await response.json();
+        setPopularMovies(data.results.slice(0, 8)); // Limit to 8 movies
+      } catch (error) {
+        console.error('Error fetching popular movies:', error);
+      } finally {
+        setIsLoadingPopular(false);
+      }
+    }
+    
+    fetchPopularMovies();
+  }, []);
+  
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      // Navigate to search results page with the query
+      router.push(`/search?query=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -141,15 +198,37 @@ export default function HomePage() {
             <Input
               placeholder="Search by title, genre, or artist..."
               className="pl-12 py-6 text-lg rounded-full border-2 focus:border-primary"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
-            <Button className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full px-8">Search</Button>
+            <Button 
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full px-8"
+              onClick={handleSearch}
+              disabled={!searchQuery.trim()}
+            >
+              Search
+            </Button>
           </div>
         </div>
       </section>
 
       {/* Trending Sections */}
       <div className="max-w-7xl mx-auto px-4">
-        <TrendingSection title="Trending Movies" items={trendingMovies} icon={Play} href="/movies" />
+        {/* <TrendingSection 
+          title="Trending Movies" 
+          items={trendingMovies} 
+          isLoading={isLoadingTrending}
+          icon={Play} 
+          href="/movies" 
+        /> */}
+        <TrendingSection 
+          title="Popular Movies" 
+          items={popularMovies} 
+          isLoading={isLoadingPopular}
+          icon={Play} 
+          href="/movies" 
+        />
         <TrendingSection title="Trending Books" items={trendingBooks} icon={BookOpen} href="/books" />
         <TrendingSection title="Trending Music" items={trendingMusic} icon={Music} href="/music" />
       </div>
