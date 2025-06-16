@@ -9,85 +9,34 @@ import { Search, Play, BookOpen, Music } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
-// Movie data will be fetched from the API
+// Movie and book data will be fetched from the API
 
-const trendingBooks = [
-  {
-    id: 1,
-    title: "The Last Library",
-    description: "A post-apocalyptic tale of knowledge preservation",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 2,
-    title: "Quantum Hearts",
-    description: "A sci-fi romance across parallel universes",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 3,
-    title: "Mountain Whispers",
-    description: "A mystical journey through ancient peaks",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 4,
-    title: "City of Shadows",
-    description: "Urban fantasy in a world of hidden magic",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-]
-
-const trendingMusic = [
-  {
-    id: 1,
-    title: "Neon Nights",
-    description: "Synthwave album with retro-futuristic vibes",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 2,
-    title: "Acoustic Soul",
-    description: "Intimate acoustic performances",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 3,
-    title: "Electric Dreams",
-    description: "Electronic music for the digital age",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 4,
-    title: "Jazz Fusion",
-    description: "Modern jazz with contemporary elements",
-    image: "/placeholder.svg?height=300&width=200",
-  },
-]
+// Music data will be fetched from the API
 
 function TrendingSection({ title, items = [], isLoading, icon: Icon, href }) {
+  // Determine the content type based on href
+  const contentType = href.replace('/', '');
+  
   return (
-    <section className="py-12">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
+    <section className="mb-12">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
           <Icon className="h-6 w-6 text-primary" />
           <h2 className="text-2xl font-bold">{title}</h2>
         </div>
         <Link href={href}>
-          <Button variant="outline" className="rounded-full">
-            View All
-          </Button>
+          <Button variant="ghost">View All</Button>
         </Link>
       </div>
-      
+
       {isLoading ? (
-        <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="flex-shrink-0 w-64">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="w-full">
               <CardContent className="p-4">
-                <div className="w-full h-48 bg-muted animate-pulse rounded-lg mb-4"></div>
-                <div className="h-5 w-3/4 bg-muted animate-pulse rounded mb-2"></div>
-                <div className="h-4 w-full bg-muted animate-pulse rounded"></div>
+                <div className="w-full h-48 bg-muted rounded-lg mb-4 animate-pulse" />
+                <div className="h-5 bg-muted rounded w-3/4 mb-2 animate-pulse" />
+                <div className="h-4 bg-muted rounded w-1/2 animate-pulse" />
               </CardContent>
             </Card>
           ))}
@@ -98,35 +47,46 @@ function TrendingSection({ title, items = [], isLoading, icon: Icon, href }) {
         </div>
       ) : (
         <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-          {items.map((item) => (
-            <Link key={item.id} href={`/movies/${item.id}`}>
-              <Card className="flex-shrink-0 w-64 hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-4">
-                  {item.posterUrl ? (
+          {items.map((item) => {
+            // Determine image source based on content type
+            const imageSrc = 
+              contentType === 'books' ? (item.coverUrl || '/placeholder.svg') :
+              contentType === 'music' ? (item.image || '/placeholder.svg') :
+              (item.posterUrl || '/placeholder.svg');
+              
+            // Determine details text based on content type
+            const detailsText = 
+              contentType === 'books' ? `${item.year || 'Unknown'} • ${item.author || 'Unknown Author'}` :
+              contentType === 'music' ? item.description || 'No description' :
+              `${item.year || ''} • ${item.type === 'movie' ? 'Movie' : 'TV Show'}`;
+              
+            // Determine link path based on content type
+            const linkPath = `/${contentType}/${item.id}`;
+            
+            return (
+              <Link key={item.id} href={linkPath}>
+                <Card className="flex-shrink-0 w-64 hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-4">
                     <Image
-                      src={item.posterUrl}
-                      alt={item.title}
+                      src={imageSrc}
+                      alt={item.title || 'Media item'}
                       width={200}
                       height={300}
                       className="w-full h-48 object-cover rounded-lg mb-4"
                     />
-                  ) : (
-                    <div className="w-full h-48 bg-muted flex items-center justify-center rounded-lg mb-4">
-                      No Image
-                    </div>
-                  )}
-                  <h3 className="font-semibold text-lg mb-2 line-clamp-1">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {item.year} • {item.type === 'movie' ? 'Movie' : 'TV Show'}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                    <h3 className="font-semibold text-lg mb-2 line-clamp-1">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {detailsText}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
     </section>
-  )
+  );
 }
 
 export default function HomePage() {
@@ -134,6 +94,10 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [popularMovies, setPopularMovies] = useState([]);
   const [isLoadingPopular, setIsLoadingPopular] = useState(true);
+  const [trendingBooks, setTrendingBooks] = useState([]);
+  const [isLoadingBooks, setIsLoadingBooks] = useState(true);
+  const [newReleases, setNewReleases] = useState([]);
+  const [isLoadingMusic, setIsLoadingMusic] = useState(true);
   
   // Fetch trending movies
   // useEffect(() => {
@@ -171,6 +135,44 @@ export default function HomePage() {
     }
     
     fetchPopularMovies();
+  }, []);
+  
+  // Fetch trending books
+  useEffect(() => {
+    async function fetchTrendingBooks() {
+      try {
+        setIsLoadingBooks(true);
+        const response = await fetch('/api/books/trending');
+        if (!response.ok) throw new Error('Failed to fetch trending books');
+        const data = await response.json();
+        setTrendingBooks(data.results); // API already limits to 8 books
+      } catch (error) {
+        console.error('Error fetching trending books:', error);
+      } finally {
+        setIsLoadingBooks(false);
+      }
+    }
+    
+    fetchTrendingBooks();
+  }, []);
+  
+  // Fetch new music releases
+  useEffect(() => {
+    async function fetchNewReleases() {
+      try {
+        setIsLoadingMusic(true);
+        const response = await fetch('/api/music/new-releases/homepage');
+        if (!response.ok) throw new Error('Failed to fetch new music releases');
+        const data = await response.json();
+        setNewReleases(data.results); // API already limits to 8 albums
+      } catch (error) {
+        console.error('Error fetching new music releases:', error);
+      } finally {
+        setIsLoadingMusic(false);
+      }
+    }
+    
+    fetchNewReleases();
   }, []);
   
   const handleSearch = () => {
@@ -229,8 +231,20 @@ export default function HomePage() {
           icon={Play} 
           href="/movies" 
         />
-        <TrendingSection title="Trending Books" items={trendingBooks} icon={BookOpen} href="/books" />
-        <TrendingSection title="Trending Music" items={trendingMusic} icon={Music} href="/music" />
+        <TrendingSection 
+          title="Trending Books" 
+          items={trendingBooks} 
+          isLoading={isLoadingBooks}
+          icon={BookOpen} 
+          href="/books" 
+        />
+        <TrendingSection 
+          title="New Music Releases" 
+          items={newReleases} 
+          isLoading={isLoadingMusic}
+          icon={Music} 
+          href="/music" 
+        />
       </div>
 
       {/* Footer */}

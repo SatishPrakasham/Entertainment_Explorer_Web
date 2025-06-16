@@ -7,6 +7,8 @@ import { Menu, Play, BookOpen, Music, Heart, User } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { UserButton, SignInButton, useUser } from "@clerk/nextjs"
+import { motion } from "framer-motion"
+import { Logo } from "@/components/ui/logo"
 
 const navItems = [
   { href: "/", label: "Home", icon: null },
@@ -24,13 +26,24 @@ export function Navigation() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="max-w-7xl mx-auto px-4 flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2">
-          <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-            <Play className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="font-bold text-xl hidden sm:inline-block">Entertainment Explorer</span>
-          <span className="font-bold text-xl sm:hidden">EE</span>
-        </Link>
+        <motion.div
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="hidden sm:block">
+              <Logo size="sm" animate={false} />
+            </div>
+            <div className="sm:hidden">
+              <motion.div
+                className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center"
+                whileHover={{ rotate: 10 }}
+              >
+                <Play className="h-5 w-5 text-primary-foreground" />
+              </motion.div>
+            </div>
+          </Link>
+        </motion.div>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-6">
