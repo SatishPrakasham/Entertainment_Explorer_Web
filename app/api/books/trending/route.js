@@ -1,41 +1,25 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
+import { getBooks } from "@/lib/books-api";
 
-export async function GET(request) {
+export async function GET() {
   try {
-    // Fetch trending books from Open Library
-    const response = await fetch('https://openlibrary.org/search.json?q=bestsellers&sort=rating&limit=8', {
-      next: { revalidate: 3600 } // Cache for 1 hour
-    });
+    // Fetch trending books
+    const books = await getBooks('', 'trending');
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch trending books');
-    }
-    
-    const data = await response.json();
-    
-    // Format the books data
-    const formattedBooks = data.docs.slice(0, 8).map(book => ({
-      id: book.key?.replace('/works/', '') || Math.random().toString(36).substring(2, 15),
-      title: book.title || 'Unknown Title',
-      description: book.first_sentence?.[0] || book.subtitle || 'No description available',
-      author: book.author_name?.[0] || 'Unknown Author',
-      coverUrl: book.cover_i 
-        ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
-        : "/placeholder.svg",
-      year: book.first_publish_year || 'Unknown Year',
-      genre: book.subject?.[0] || 'Fiction'
-    }));
-    
+    // Return first 20 books
+    const trendingBooks = books.slice(0, 20);
+
     return NextResponse.json({
-      results: formattedBooks,
-      total: formattedBooks.length
+      books: trendingBooks,
+      total: trendingBooks.length,
+      page: 1,
+      limit: 20
     });
   } catch (error) {
-    console.error('Error in trending books API:', error);
-    return NextResponse.json({ 
-      error: 'Failed to fetch trending books',
-      results: [],
-      total: 0
-    }, { status: 500 });
+    console.error("Error fetching trending books:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch trending books", details: error.message },
+      { status: 500 }
+    );
   }
 }
