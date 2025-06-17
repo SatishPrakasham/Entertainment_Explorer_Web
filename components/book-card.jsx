@@ -7,15 +7,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-function BookCard({ book, isHorizontal = false }) {
-  // Transform book data to match component expectations
+// BookCard: Display individual book details (cover, title, description, etc.)
+export function BookCard({ book, isHorizontal = false }) {
   const imageUrl = book.coverUrl || "/placeholder.svg?height=300&width=200";
-  const year = book.firstPublishYear || "Unknown";
-  const genres = book.subjects?.[0] || "Fiction";
-  
+  const year = book.year || "Unknown";
+  const genres = book.genre || "Fiction";
+
   return (
     <Link href={`/books/${book.id}`} className="block">
-      <Card className={`${isHorizontal ? "flex-shrink-0 w-64" : ""} hover:shadow-lg transition-shadow group`}>
+      <Card className="hover:shadow-lg transition-shadow group w-full">
         <CardContent className="p-4">
           <div className="relative overflow-hidden rounded-lg mb-4">
             <Image
@@ -36,28 +36,14 @@ function BookCard({ book, isHorizontal = false }) {
             </div>
           </div>
           <h3 className="font-semibold text-lg mb-2 line-clamp-1">{book.title}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{book.description}</p>
+          {/* {book.description && (
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{book.description}</p>
+          )} */}
           <div className="flex justify-between items-center">
-            <span className="text-xs text-muted-foreground">
-              {year} • {genres}
-            </span>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="rounded-full"
-              onClick={(e) => {
-                e.preventDefault();
-                // Add to list functionality would go here
-              }}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add
-            </Button>
+            <span className="text-xs text-muted-foreground">{year} • {genres}</span>
           </div>
         </CardContent>
       </Card>
     </Link>
   );
 }
-
-export default BookCard;
