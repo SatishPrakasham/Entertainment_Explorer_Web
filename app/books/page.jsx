@@ -74,7 +74,7 @@ useEffect(() => {
       });
     }
 
-    // Apply search query if it exists
+    // Apply search query 
     if (searchQuery) {
       const q = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(
