@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { AddToListButton } from "@/components/AddToListButton";
 
 // BookCard: Display individual book details (cover, title, description, etc.)
 export function BookCard({ book, isHorizontal = false }) {
@@ -26,13 +27,12 @@ export function BookCard({ book, isHorizontal = false }) {
               className="w-full h-48 object-cover transition-transform group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <Button size="sm" className="rounded-full" onClick={(e) => {
-                e.preventDefault();
-                // Add to list functionality would go here
-              }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add to List
-              </Button>
+              <AddToListButton 
+                item={book} 
+                category="books" 
+                size="sm" 
+                className="rounded-full"
+              />
             </div>
           </div>
           <h3 className="font-semibold text-lg mb-2 line-clamp-1">{book.title}</h3>
@@ -41,6 +41,12 @@ export function BookCard({ book, isHorizontal = false }) {
           )} */}
           <div className="flex justify-between items-center">
             <span className="text-xs text-muted-foreground">{year} • {genres}</span>
+            <AddToListButton 
+              item={book} 
+              category="books" 
+              variant="outline" 
+              className="rounded-full"
+            />
           </div>
         </CardContent>
       </Card>

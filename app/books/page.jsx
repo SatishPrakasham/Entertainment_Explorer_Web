@@ -19,57 +19,81 @@ export default function BooksPage() {
   const [genre, setGenre] = useState("all");
   const [year, setYear] = useState("all");
   const [selectedGenre, setSelectedGenre] = useState("all");
-  const genres = [
-    { id: "all", name: "All" },
-    { id: "fiction", name: "Fiction" },
-    { id: "non-fiction", name: "Non-Fiction" },
-    { id: "mystery", name: "Mystery" },
-    { id: "thriller", name: "Thriller" },
-    { id: "sci-fi", name: "Sci-Fi" },
-    { id: "fantasy", name: "Fantasy" },
-    { id: "romance", name: "Romance" },
-    { id: "horror", name: "Horror" },
-    { id: "adventure", name: "Adventure" },
-  ];
+  const [availableGenres, setAvailableGenres] = useState([]);
+  const [availableYears, setAvailableYears] = useState([]);
+
+  // Extract unique genres from books
+  const extractGenres = (books) => {
+    const genres = new Set();
+    books.forEach(book => {
+      if (book.genre && book.genre !== 'Unknown Genre') {
+        genres.add(book.genre);
+      }
+    });
+    return Array.from(genres).sort();
+  };
+
+  // Extract unique years from books
+  const extractYears = (books) => {
+    const years = new Set();
+    books.forEach(book => {
+      if (book.year && book.year !== 'Unknown Year' && !isNaN(book.year)) {
+        years.add(parseInt(book.year));
+      }
+    });
+    return Array.from(years).sort((a, b) => b - a); // Sort descending (newest first)
+  };
 
   useEffect(() => {
     const loadBooks = async () => {
-      const trendingData = await getTrendingBooks();
-      const classicData = await getClassicBooks();
-      setTrending(trendingData);
-      setClassics(classicData);
-      applyFilters(trendingData, classicData);
+      try {
+        const trendingData = await getTrendingBooks();
+        const classicData = await getClassicBooks();
+        
+        setTrending(trendingData);
+        setClassics(classicData);
+        
+        // Extract available filter options from the actual data
+        const allBooks = [...trendingData, ...classicData];
+        setAvailableGenres(extractGenres(allBooks));
+        setAvailableYears(extractYears(allBooks));
+        
+        applyFilters(trendingData, classicData);
+      } catch (error) {
+        console.error('Error loading books:', error);
+      }
     };
   
     loadBooks();
   }, []); // Empty dependency array
 
-  // Update filtered books when genre changes
-useEffect(() => {
-    applyFilters(trending, classics);
-  }, [genre, trending, classics]);
-  
-  // Update filtered books when year changes
+  // Update filtered books when filters change
   useEffect(() => {
     applyFilters(trending, classics);
-  }, [year, trending, classics]);
+  }, [genre, year, trending, classics]);
 
   const filterBooks = (books) => {
     let filtered = [...books];
 
     // Apply genre filter
     if (genre !== "all") {
-      filtered = filtered.filter(book => book.genre === genre);
+      filtered = filtered.filter(book => {
+        return book.genre && book.genre.toLowerCase().includes(genre.toLowerCase());
+      });
     }
 
     // Apply year filter
     if (year !== "all") {
       filtered = filtered.filter(book => {
-        const bookYear = book.firstPublishYear || 0;
+        const bookYear = parseInt(book.year);
+        if (isNaN(bookYear)) return false;
+        
+        if (year === "2020s") return bookYear >= 2020 && bookYear <= 2029;
         if (year === "2010s") return bookYear >= 2010 && bookYear <= 2019;
         if (year === "2000s") return bookYear >= 2000 && bookYear <= 2009;
         if (year === "1990s") return bookYear >= 1990 && bookYear <= 1999;
         if (year === "older") return bookYear < 1990;
+        
         return bookYear.toString() === year;
       });
     }
@@ -107,6 +131,7 @@ useEffect(() => {
     const filtered = filterBooks(allBooks);
     setFilteredBooks(filtered);
   };
+
   return (
     <div className="min-h-screen bg-background px-4 py-8 max-w-7xl mx-auto">
       {/* Header */}
@@ -125,23 +150,42 @@ useEffect(() => {
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             />
           </div>
+          
+          {/* Genre Filter Dropdown */}
+          <Select value={genre} onValueChange={handleGenreChange}>
+            <SelectTrigger className="w-full md:w-48 rounded-full">
+              <SelectValue placeholder="Genre" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Genres</SelectItem>
+              {availableGenres.map((genreOption) => (
+                <SelectItem key={genreOption} value={genreOption}>
+                  {genreOption}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {/* Year Filter Dropdown */}
           <Select value={year} onValueChange={handleYearChange}>
             <SelectTrigger className="w-full md:w-48 rounded-full">
               <SelectValue placeholder="Year" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Years</SelectItem>
-              <SelectItem value="2024">2024</SelectItem>
-              <SelectItem value="2023">2023</SelectItem>
-              <SelectItem value="2022">2022</SelectItem>
-              <SelectItem value="2021">2021</SelectItem>
-              <SelectItem value="2020">2020</SelectItem>
-              <SelectItem value="2010s">2010-2019</SelectItem>
-              <SelectItem value="2000s">2000-2009</SelectItem>
-              <SelectItem value="1990s">1990-1999</SelectItem>
+              <SelectItem value="2020s">2020s</SelectItem>
+              <SelectItem value="2010s">2010s</SelectItem>
+              <SelectItem value="2000s">2000s</SelectItem>
+              <SelectItem value="1990s">1990s</SelectItem>
               <SelectItem value="older">Before 1990</SelectItem>
+              {availableYears.slice(0, 10).map((yearOption) => (
+                <SelectItem key={yearOption} value={yearOption.toString()}>
+                  {yearOption}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
+          
           <Button className="rounded-full px-8" onClick={handleSearch}>
             Search
           </Button>
@@ -152,15 +196,23 @@ useEffect(() => {
       <div className="mb-8">
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="flex space-x-2 p-1">
-            {genres.map((genre) => (
+            <Button
+              variant={selectedGenre === "all" ? "default" : "outline"}
+              size="sm"
+              className="rounded-full"
+              onClick={() => handleGenreChange("all")}
+            >
+              All
+            </Button>
+            {availableGenres.map((genreOption) => (
               <Button
-                key={genre.id}
-                variant={genre.id === selectedGenre ? "default" : "outline"}
+                key={genreOption}
+                variant={genreOption === selectedGenre ? "default" : "outline"}
                 size="sm"
                 className="rounded-full"
-                onClick={() => handleGenreChange(genre.id)}
+                onClick={() => handleGenreChange(genreOption)}
               >
-                {genre.name}
+                {genreOption}
               </Button>
             ))}
           </div>
@@ -169,13 +221,17 @@ useEffect(() => {
       </div>
 
       {/* Search Results */}
-      {searchQuery ? (
+      {searchQuery || genre !== "all" || year !== "all" ? (
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-4">Search Results</h2>
+          <h2 className="text-2xl font-bold mb-4">
+            {searchQuery ? `Search Results for "${searchQuery}"` : 'Filtered Results'}
+          </h2>
           {filteredBooks.length > 0 ? (
             <BookList books={filteredBooks} />
           ) : (
-            <p className="text-muted-foreground">No books found for "{searchQuery}".</p>
+            <p className="text-muted-foreground">
+              No books found matching your criteria.
+            </p>
           )}
         </section>
       ) : (
@@ -183,13 +239,13 @@ useEffect(() => {
           {/* Trending Books */}
           <section className="mb-12">
             <h2 className="text-2xl font-bold mb-6">Trending Books</h2>
-            <BookList books={filteredBooks.length > 0 ? filteredBooks.filter(b => trending.some(t => t.id === b.id)) : trending} isHorizontal={true} />
+            <BookList books={trending} isHorizontal={true} />
           </section>
 
           {/* Classic Books */}
           <section className="mb-16">
             <h2 className="text-2xl font-bold mb-6">Classic Books</h2>
-            <BookList books={filteredBooks.length > 0 ? filteredBooks.filter(b => classics.some(c => c.id === b.id)) : classics} />
+            <BookList books={classics} />
           </section>
         </>
       )}
@@ -219,48 +275,30 @@ useEffect(() => {
                 <Link href="/" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                   Home
                 </Link>
-                <Link
-                  href="/movies"
-                  className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
+                <Link href="/movies" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                   Movies
                 </Link>
-                <Link
-                  href="/books"
-                  className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
+                <Link href="/books" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                   Books
                 </Link>
-                <Link
-                  href="/music"
-                  className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
+                <Link href="/music" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                   Music
                 </Link>
               </div>
             </div>
 
-            {/* Account */}
+            {/* Categories */}
             <div className="space-y-4">
-              <h3 className="font-semibold">Account</h3>
+              <h3 className="font-semibold">Categories</h3>
               <div className="space-y-2">
-                <Link
-                  href="/signin"
-                  className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Sign In
+                <Link href="/movies" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Popular Movies
                 </Link>
-                <Link
-                  href="/signup"
-                  className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Sign Up
+                <Link href="/books" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Trending Books
                 </Link>
-                <Link
-                  href="/my-list"
-                  className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  My List
+                <Link href="/music" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
+                  New Music
                 </Link>
               </div>
             </div>
@@ -269,33 +307,24 @@ useEffect(() => {
             <div className="space-y-4">
               <h3 className="font-semibold">Support</h3>
               <div className="space-y-2">
-                <Link href="/help" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link href="#" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                   Help Center
                 </Link>
-                <Link
-                  href="/contact"
-                  className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
+                <Link href="#" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                   Contact Us
                 </Link>
-                <Link
-                  href="/privacy"
-                  className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
+                <Link href="#" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                   Privacy Policy
                 </Link>
-                <Link
-                  href="/terms"
-                  className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
+                <Link href="#" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                   Terms of Service
                 </Link>
               </div>
             </div>
           </div>
 
-          <div className="border-t mt-8 pt-8 text-center">
-            <p className="text-sm text-muted-foreground">&copy; 2024 Entertainment Explorer. All rights reserved.</p>
+          <div className="border-t mt-12 pt-8 text-center text-sm text-muted-foreground">
+            <p>&copy; 2024 Entertainment Explorer. All rights reserved.</p>
           </div>
         </div>
       </footer>

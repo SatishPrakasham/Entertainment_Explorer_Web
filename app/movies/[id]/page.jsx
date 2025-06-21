@@ -7,6 +7,7 @@ import { Plus, Star, Clock, Calendar, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AddToListButton } from "@/components/AddToListButton";
 
 // Create a wrapper component to extract the ID from the path
 export default function MovieDetailsPage() {
@@ -150,10 +151,12 @@ function MovieDetails() {
                 )}
               </CardContent>
             </Card>
-            <Button className="w-full mt-4">
-              <Plus className="h-4 w-4 mr-2" />
-              Add to My List
-            </Button>
+            <AddToListButton 
+              item={movie} 
+              category="movies" 
+              className="w-full mt-4"
+              showText={true}
+            />
           </div>
 
           {/* Movie Details */}
