@@ -7,6 +7,7 @@ import { Play, Plus, Clock, Music, Disc } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { AddToListButton } from "@/components/AddToListButton";
 
 // Format seconds to MM:SS
 function formatDuration(seconds) {
@@ -35,22 +36,30 @@ export function TrackCard({ track, isHorizontal = false }) {
                 className="w-full h-48 object-cover transition-transform group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Button size="icon" variant="secondary" className="rounded-full">
-                  <Play className="h-5 w-5" />
+                <Button size="sm" variant="secondary" className="rounded-full mr-2">
+                  <Play className="h-4 w-4" />
                 </Button>
+                <AddToListButton 
+                  item={track} 
+                  category="songs" 
+                  size="sm" 
+                  className="rounded-full"
+                />
               </div>
             </div>
             <h3 className="font-semibold text-lg mb-1 line-clamp-1">{track.title}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-1 mb-2">{track.artist}</p>
+            <p className="text-sm text-muted-foreground mb-3 line-clamp-1">{track.artist}</p>
             <div className="flex justify-between items-center">
               <div className="flex items-center text-xs text-muted-foreground">
                 <Clock className="h-3 w-3 mr-1" />
                 <span>{formatDuration(track.duration)}</span>
               </div>
-              <Button size="sm" variant="outline" className="rounded-full">
-                <Plus className="h-4 w-4 mr-1" />
-                Add
-              </Button>
+              <AddToListButton 
+                item={track} 
+                category="songs" 
+                variant="outline" 
+                className="rounded-full"
+              />
             </div>
           </CardContent>
         </Card>
@@ -78,22 +87,30 @@ export function AlbumCard({ album, isHorizontal = false }) {
                 className="w-full h-48 object-cover transition-transform group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Button size="icon" variant="secondary" className="rounded-full">
-                  <Play className="h-5 w-5" />
+                <Button size="sm" variant="secondary" className="rounded-full mr-2">
+                  <Play className="h-4 w-4" />
                 </Button>
+                <AddToListButton 
+                  item={album} 
+                  category="songs" 
+                  size="sm" 
+                  className="rounded-full"
+                />
               </div>
             </div>
             <h3 className="font-semibold text-lg mb-1 line-clamp-1">{album.title}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-1 mb-2">{album.artist}</p>
+            <p className="text-sm text-muted-foreground mb-3 line-clamp-1">{album.artist}</p>
             <div className="flex justify-between items-center">
               <div className="flex items-center text-xs text-muted-foreground">
                 <Disc className="h-3 w-3 mr-1" />
                 <span>{album.trackCount} tracks</span>
               </div>
-              <Button size="sm" variant="outline" className="rounded-full">
-                <Plus className="h-4 w-4 mr-1" />
-                Add
-              </Button>
+              <AddToListButton 
+                item={album} 
+                category="songs" 
+                variant="outline" 
+                className="rounded-full"
+              />
             </div>
           </CardContent>
         </Card>

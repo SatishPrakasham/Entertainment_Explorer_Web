@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { AddToListButton } from "@/components/AddToListButton";
 
 function MovieCard({ movie, isHorizontal = false }) {
   // Use Simkl data format
@@ -28,13 +29,12 @@ function MovieCard({ movie, isHorizontal = false }) {
               className="w-full h-48 object-cover transition-transform group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <Button size="sm" className="rounded-full" onClick={(e) => {
-                e.preventDefault();
-                // Add to list functionality would go here
-              }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add to List
-              </Button>
+              <AddToListButton 
+                item={movie} 
+                category="movies" 
+                size="sm" 
+                className="rounded-full"
+              />
             </div>
           </div>
           <h3 className="font-semibold text-lg mb-2 line-clamp-1">{movie.title}</h3>
@@ -43,18 +43,12 @@ function MovieCard({ movie, isHorizontal = false }) {
             <span className="text-xs text-muted-foreground">
               {year} • {genres}
             </span>
-            <Button 
-              size="sm" 
+            <AddToListButton 
+              item={movie} 
+              category="movies" 
               variant="outline" 
               className="rounded-full"
-              onClick={(e) => {
-                e.preventDefault();
-                // Add to list functionality would go here
-              }}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add
-            </Button>
+            />
           </div>
         </CardContent>
       </Card>

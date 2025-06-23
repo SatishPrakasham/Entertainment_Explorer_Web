@@ -6,7 +6,7 @@ import { getBookById } from "@/lib/openLibraryApi";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button"; 
+import { Button } from "@/components/ui/button"; // You can use a button component from your design system
 
 export default function BookDetailsPage() {
   const [book, setBook] = useState(null);
@@ -44,9 +44,13 @@ export default function BookDetailsPage() {
             height={450}
             className="rounded-lg object-cover"
           />
-          <Button className="mt-4 w-full" variant="outline">
-            Add to My List
-          </Button>
+          <AddToListButton 
+            item={book} 
+            category="books" 
+            className="mt-4 w-full" 
+            variant="outline"
+            showText={true}
+          />
         </div>
 
         {/* Book Details */}

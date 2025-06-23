@@ -3,12 +3,21 @@
 import React from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, Play, BookOpen, Music, Heart, User } from "lucide-react"
+import { Menu, Play, BookOpen, Music, Heart, User, LogOut } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { UserButton, SignInButton, useUser } from "@clerk/nextjs"
+import { usePathname, useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/AuthContext"
 import { motion } from "framer-motion"
 import { Logo } from "@/components/ui/logo"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const navItems = [
   { href: "/", label: "Home", icon: null },
@@ -20,7 +29,8 @@ const navItems = [
 
 export function Navigation() {
   const pathname = usePathname()
-  const { isSignedIn, user } = useUser()
+  const router = useRouter()
+  const { user, logout } = useAuth()
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -66,25 +76,68 @@ export function Navigation() {
 
         {/* Sign In Button or User Profile */}
         <div className="flex items-center space-x-4">
-          {isSignedIn ? (
-            <UserButton afterSignOutUrl="/" appearance={{
-              elements: {
-                userButtonAvatarBox: "h-8 w-8"
-              }
-            }} />
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="/placeholder-avatar.jpg" alt={user.username || user.email} />
+                    <AvatarFallback>{user.username?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.username || 'User'}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/my-list">My List</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={async () => {
+                    await logout();
+                    router.push('/');
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <div className="flex items-center space-x-2">
-              <SignInButton mode="modal">
-                <Button variant="outline" size="sm" className="hidden sm:inline-flex">
-                  <User className="h-4 w-4 mr-2" />
-                  Sign In
-                </Button>
-              </SignInButton>
-              <SignInButton mode="modal">
-                <Button variant="outline" size="sm" className="sm:hidden">
-                  <User className="h-4 w-4" />
-                </Button>
-              </SignInButton>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="hidden sm:inline-flex"
+                onClick={() => {
+                  console.log('Sign In button clicked - navigating to /login');
+                  router.push('/login');
+                }}
+              >
+                <User className="h-4 w-4 mr-2" />
+                Sign In
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="sm:hidden"
+                onClick={() => {
+                  console.log('Mobile Sign In button clicked - navigating to /login');
+                  router.push('/login');
+                }}
+              >
+                <User className="h-4 w-4" />
+              </Button>
             </div>
           )}
 
