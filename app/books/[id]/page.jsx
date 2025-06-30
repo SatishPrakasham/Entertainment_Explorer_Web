@@ -6,7 +6,8 @@ import { getBookById } from "@/lib/openLibraryApi";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button"; // You can use a button component from your design system
+import { Button } from "@/components/ui/button";
+import { AddToListButton } from "@/components/AddToListButton";
 
 export default function BookDetailsPage() {
   const [book, setBook] = useState(null);
